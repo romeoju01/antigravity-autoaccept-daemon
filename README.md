@@ -1,35 +1,45 @@
-# Antigravity AutoAccept 2.0 (Standalone Portable Edition)
+# Antigravity AutoAccept 2.0 (Cross-Platform Daemon)
 
-A highly robust, zero-configuration background daemon designed for Antigravity 2.0. This standalone package can be zipped and shared directly with coworkers. 
+A highly robust, zero-configuration background daemon designed for Antigravity 2.0. This out-of-process utility automatically clicks standard permission and confirmation prompts in your IDE, providing a completely hands-free development experience.
 
-It handles automatic dependency bootstrapping, works under any Windows user account without hardcoded paths, and does not require local VS Code extension files.
+It handles automatic dependency bootstrapping, works cross-platform (Windows, macOS, Linux) without hardcoded paths, and does not require local VS Code extension files.
 
 ---
 
 ## ⚡ Quick Start
 
-1. **Prerequisite**: Ensure **[Node.js](https://nodejs.org/)** is installed on your computer.
-2. **Launch**: Double-click **`run-autoaccept.bat`** to start the tool.
-   * *First run:* It will automatically fetch and install its lightweight WebSocket client library (`ws`).
-   * *Subsequent runs:* It launches instantly with zero overhead.
+### Prerequisites
+* Ensure **[Node.js](https://nodejs.org/)** is installed on your computer.
+
+### Launch Instructions
+
+#### 🪟 Windows
+Double-click **`run-autoaccept.bat`** to start:
+* **First run:** It will automatically install the local dependency (`ws`) and configure a silent, persistent startup launcher in your Startup folder (`Shell:startup`).
+* **Subsequent runs:** It launches instantly and invisibly in the background on system boot.
+
+#### 🍎 macOS & 🐧 Linux
+Open your terminal inside this folder and run:
+1. **Install dependencies**: `npm install`
+2. **Start the daemon**: `npm start`
 
 ---
 
-## ⚙️ How It Works (Antigravity 2.0 CDP Architecture)
+## ⚙️ How It Works (CDP Architecture)
 
-Antigravity 2.0 has completely removed the standard extension host. This daemon works out-of-process using the **Chrome DevTools Protocol (CDP)**:
+Antigravity 2.0 does not run in-process extensions. This daemon runs as a lightweight out-of-process utility using the **Chrome DevTools Protocol (CDP)**:
 
-1. It periodically polls the configured CDP port (default: `9334`).
-2. When an active Antigravity session is found, it automatically injects a sophisticated, non-intrusive **DOM MutationObserver** directly into the IDE interface.
-3. This observer intercepts action confirmation screens and automatically triggers clicks on approved buttons (e.g., `Run`, `Accept`, `Allow`, `Continue`, `Retry`) based on your rules.
+1. It polls the configured CDP port (default: `9334`).
+2. When an active Antigravity session is discovered, it dynamically injects a sophisticated, non-intrusive **DOM MutationObserver** into the IDE webview frame.
+3. The observer intercepts action confirmation modals and triggers immediate clicks on approved buttons (`Run`, `Accept`, `Allow`, `Continue`, `Yes, allow this time`) based on your rules, including advanced 2-step radio submission sequences.
 
 ---
 
 ## 🛠️ Configuration Settings
 
-The daemon automatically monitors and dynamically hot-reloads your configuration directly from your global settings! 
+The daemon automatically monitors and dynamically hot-reloads your settings in real time!
 
-To customize settings, open your active Antigravity workspace, press `Ctrl + ,` (or open user `settings.json`), and append the following configuration parameters:
+Open your global Antigravity `settings.json` (`Ctrl + ,` or `Cmd + ,`) and append the following configuration parameters:
 
 ```json
 {
