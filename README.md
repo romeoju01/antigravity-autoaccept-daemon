@@ -1,98 +1,156 @@
-# Antigravity 2.0 AutoAccept (Cross-Platform Daemon)
+# Antigravity 2.0 AutoAccept
 
-A highly robust, zero-configuration background daemon designed for Antigravity 2.0. This out-of-process utility automatically clicks standard permission and confirmation prompts in your IDE, providing a completely hands-free development experience.
-
-It handles automatic dependency bootstrapping, works cross-platform (Windows, macOS, Linux) without hardcoded paths, and does not require local VS Code extension files.
+> **Tired of clicking "Allow", "Run", and "Yes" every few seconds while your AI agent works?**  
+> This tool does it for you — automatically, silently, in the background.
 
 ---
 
-## ⚡ Quick Start
+## 🎬 What Does It Do?
 
-### Prerequisites
-* Ensure **[Node.js](https://nodejs.org/)** is installed on your computer.
+When you're using **Antigravity 2.0** as your AI coding assistant, it frequently pauses and asks for your permission before running commands or editing files. This tool watches for those pop-ups and clicks them for you automatically — so your agent can work uninterrupted while you focus on other things.
 
-### Launch Instructions
+**Before**: Agent pauses → you switch windows → click "Run" → agent continues  
+**After**: Agent pauses → ✅ auto-clicked → agent continues (you didn't have to do anything)
+
+---
+
+## ✅ Requirements
+
+- **[Node.js](https://nodejs.org/)** must be installed on your computer *(it's free and takes ~2 minutes)*
+- **Antigravity 2.0** IDE must be open and running
+
+---
+
+## 🚀 Getting Started
+
+### Step 1 — Download
+
+Click the green **`<> Code`** button at the top of this page → **Download ZIP** → Extract the folder anywhere on your computer (e.g. your Desktop or Documents).
+
+### Step 2 — Run It
 
 #### 🪟 Windows
-Double-click **`run-autoaccept.bat`** to start:
-* **First run:** Automatically installs the local dependency (`ws`) and starts the daemon.
-* **Subsequent runs:** Launches instantly. Keep the terminal window open — it streams live activity logs.
+Double-click **`run-autoaccept.bat`**
 
-#### 🍎 macOS & 🐧 Linux
-Open your terminal inside this folder and run:
-1. **Install dependencies**: `npm install`
-2. **Start the daemon**: `npm start`
+- **First time?** It will automatically download the one small dependency it needs, then start up.
+- A terminal window will open showing live activity. **Keep it open** while you work.
 
----
+#### 🍎 Mac / 🐧 Linux
+Open Terminal, navigate to the extracted folder, and run:
+```
+npm install
+npm start
+```
 
-## 🔄 Automatic Boot/Startup Survival (Optional)
-
-To have the daemon start automatically every time Windows boots, follow these **safe, one-time manual steps** — no scripts required:
-
-1. Press **`Win + R`**, type `shell:startup`, and hit **Enter**.  
-   *(This opens your personal Startup folder in Windows Explorer.)*
-2. In a separate Explorer window, navigate to this folder (`antigravity-autoaccept-standalone`).
-3. **Right-click** `run-autoaccept.bat` → **Send to** → **Desktop (create shortcut)**.
-4. Move (drag) that desktop shortcut into the Startup folder you opened in step 1.
-
-> **That's it.** The daemon will now launch silently minimized on every Windows boot.  
-> To remove it later, just delete the shortcut from `shell:startup`.
-
-### 🍎 macOS & 🐧 Linux Startup
-The included `run-autoaccept.sh` script **automatically** configures boot persistence:
-- **macOS**: Creates and loads a `LaunchAgent` plist (`~/Library/LaunchAgents/com.arative.autoaccept.plist`).
-- **Linux**: Creates and enables a `systemd` user service (`~/.config/systemd/user/autoaccept.service`).
+That's it. The tool is now running in the background watching your IDE.
 
 ---
 
-## ⚙️ How It Works (CDP Architecture)
+## 🔄 Run Automatically on Startup (Optional)
 
-Antigravity 2.0 does not run in-process extensions. This daemon runs as a lightweight out-of-process utility using the **Chrome DevTools Protocol (CDP)**:
+Don't want to remember to launch it every time you restart your computer? Here's how to make it start automatically:
 
-1. It polls the configured CDP port (default: `9334`).
-2. When an active Antigravity session is discovered, it dynamically injects a sophisticated, non-intrusive **DOM MutationObserver** into the IDE webview frame.
-3. The observer intercepts action confirmation modals and triggers immediate clicks on approved buttons (`Run`, `Accept`, `Allow`, `Continue`, `Yes, allow this time`) based on your rules, including advanced 2-step radio submission sequences.
+### 🪟 Windows (3 steps, no scripting)
+
+1. Press **`Win + R`** on your keyboard, type `shell:startup`, and hit **Enter**.  
+   *(A folder will open — this is your Windows Startup folder)*
+
+2. Go back to the extracted `antigravity-autoaccept-standalone` folder and find `run-autoaccept.bat`.
+
+3. **Right-click** `run-autoaccept.bat` → **Send to** → **Desktop (create shortcut)**.  
+   Then **drag that shortcut** into the Startup folder from Step 1.
+
+Done! The tool will now start silently every time Windows boots. To stop it from auto-starting, just delete the shortcut from the Startup folder.
+
+### 🍎 macOS & 🐧 Linux
+
+Run `npm start` once from the terminal — the script automatically sets up boot persistence for you:
+- **macOS**: installs a LaunchAgent that starts on login
+- **Linux**: registers a systemd user service that starts on boot
 
 ---
 
-## 🛠️ Configuration Settings
+## 🛑 How to Stop It
 
-The daemon automatically monitors and dynamically hot-reloads your settings in real time!
+- **Windows**: Close the terminal window, or press `Ctrl + C` inside it.
+- **Mac/Linux**: Press `Ctrl + C` in the terminal.
 
-Open your global Antigravity `settings.json` (`Ctrl + ,` or `Cmd + ,`) and append the following configuration parameters:
+---
+
+## ⚙️ Optional: Customize What Gets Auto-Clicked
+
+By default, the tool auto-clicks the most common approval buttons (`Run`, `Allow`, `Accept`, `Yes`, `Continue`). You can customize this behavior in your Antigravity **Settings** (`Ctrl+,` or `Cmd+,`):
 
 ```json
 {
-  "autoAcceptV2.cdpPort": 9334,
   "autoAcceptV2.autoAcceptFileEdits": true,
   "autoAcceptV2.autoRetryEnabled": true,
-  "autoAcceptV2.customButtonTexts": [
-    "approve review",
-    "bypass safety"
-  ],
   "autoAcceptV2.blockedCommands": [
     "rm -rf",
-    "git push origin master",
     "drop database"
-  ],
-  "autoAcceptV2.allowedCommands": [
-    "npm run test",
-    "python test.py"
   ]
 }
 ```
 
-### Configuration Keys:
-* **`autoAcceptV2.cdpPort`** *(number, default: `9334`)*: The debug port your Antigravity client is running on.
-* **`autoAcceptV2.autoAcceptFileEdits`** *(boolean, default: `true`)*: Auto-accept and save agent file modifications.
-* **`autoAcceptV2.autoRetryEnabled`** *(boolean, default: `true`)*: Auto-retry on terminal command failures or compilation hangs.
-* **`autoAcceptV2.customButtonTexts`** *(array of strings)*: Custom UI button phrases you want to automatically click.
-* **`autoAcceptV2.blockedCommands`** *(array of strings)*: Prevent auto-accepting any terminal execution containing these keywords. The daemon will dynamically overwrite the UI and label the button `⛔ Blocked by Filter` to protect your environment.
-* **`autoAcceptV2.allowedCommands`** *(array of strings)*: If defined, the daemon will *only* auto-accept command executions matching these specific phrases.
+| Setting | What it does | Default |
+|---|---|---|
+| `autoAcceptFileEdits` | Auto-accept when the agent edits or saves files | `true` |
+| `autoRetryEnabled` | Auto-retry when a command fails | `true` |
+| `blockedCommands` | Commands that should **never** be auto-approved | *(none)* |
+| `allowedCommands` | If set, **only** these commands will be auto-approved | *(none)* |
+| `customButtonTexts` | Extra button labels you want to auto-click | *(none)* |
+| `cdpPort` | Advanced: the debug port Antigravity runs on | `9334` |
 
 ---
 
-## 🛡️ Safety Features
-* **Circuit Breaker**: Prevents infinite click-loops by halting automatically if the agent triggers 3 failures/retries within a rolling 60-second window.
-* **Bare-Word Protection**: Evaluates DOM hierarchy to prevent accidentally clicking normal sidebar links, conversation items, or plain text containing terms like "run" or "accept".
-* **Real-Time Stream Logging**: The terminal window streams active DOM actions and audit notifications as they occur in your IDE!
+## 🛡️ Is It Safe?
+
+Yes. A few things worth knowing:
+
+- **It only works locally.** The tool connects only to your own computer (via `localhost`) — it never makes any network requests or sends data anywhere.
+- **No installation required.** Nothing is installed system-wide. You can delete the folder at any time to completely remove it.
+- **Open source.** Everything this tool does is visible in `autoaccept-daemon.js`. No obfuscation, no surprises.
+- **Safety circuit breaker.** If the agent starts failing repeatedly (3+ failures in 60 seconds), the tool stops clicking automatically to prevent infinite loops.
+- **Filter protection.** You can blocklist specific dangerous commands (like `rm -rf`) so they are never auto-approved, even if the agent asks.
+
+---
+
+## 🙋 Troubleshooting
+
+**"I double-clicked the .bat file and nothing happened / it closed immediately"**  
+→ Make sure Node.js is installed. [Download it here](https://nodejs.org/) and try again.
+
+**"It's running but the agent is still pausing for approval"**  
+→ Make sure Antigravity is open and you have an active conversation. The tool only activates when a session is detected.
+
+**"I got a Windows Defender warning"**  
+→ This is a false positive. The tool is open source and does nothing suspicious. You can right-click the `.bat` file → **Run anyway**, or add the folder to your Windows Defender exclusions.
+
+**"The terminal window keeps closing / crashing"**  
+→ Try running it from the command line manually: open a terminal, `cd` into the folder, and run `node autoaccept-daemon.js` to see the full error message.
+
+---
+
+<details>
+<summary>🔧 Technical Details (for developers)</summary>
+
+### How It Works
+
+This daemon uses the **Chrome DevTools Protocol (CDP)** to communicate with the Antigravity IDE webview:
+
+1. It polls the CDP port (default `9334`) every 2 seconds to discover active page targets.
+2. When an Antigravity session is found, it injects a **throttled DOM MutationObserver** (max 4 scans/sec) into the page's execution context via `Runtime.evaluate`.
+3. The observer uses a mature matching engine with Shadow DOM traversal, leaf-node preference, sidebar isolation guards, and ambiguous-word disambiguation to find and click valid permission buttons.
+4. On page reload or navigation, `Runtime.executionContextsCleared` triggers automatic re-injection — no polling gaps.
+5. The MutationObserver is throttled with a 250ms minimum scan interval to prevent main-thread starvation in large IDE DOM trees.
+
+### Startup Persistence (Windows)
+The Windows launcher (`run-autoaccept.bat`) does **not** programmatically modify your Startup folder or use COM objects/VBScript — by design, to avoid antivirus false positives. Manual shortcut setup is described above.
+
+</details>
+
+---
+
+## 📄 License
+
+MIT © [Arative](https://arative.com)
