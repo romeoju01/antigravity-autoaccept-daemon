@@ -15,13 +15,33 @@ It handles automatic dependency bootstrapping, works cross-platform (Windows, ma
 
 #### 🪟 Windows
 Double-click **`run-autoaccept.bat`** to start:
-* **First run:** It will automatically install the local dependency (`ws`) and configure a silent, persistent startup launcher in your Startup folder (`Shell:startup`).
-* **Subsequent runs:** It launches instantly and invisibly in the background on system boot.
+* **First run:** Automatically installs the local dependency (`ws`) and starts the daemon.
+* **Subsequent runs:** Launches instantly. Keep the terminal window open — it streams live activity logs.
 
 #### 🍎 macOS & 🐧 Linux
 Open your terminal inside this folder and run:
 1. **Install dependencies**: `npm install`
 2. **Start the daemon**: `npm start`
+
+---
+
+## 🔄 Automatic Boot/Startup Survival (Optional)
+
+To have the daemon start automatically every time Windows boots, follow these **safe, one-time manual steps** — no scripts required:
+
+1. Press **`Win + R`**, type `shell:startup`, and hit **Enter**.  
+   *(This opens your personal Startup folder in Windows Explorer.)*
+2. In a separate Explorer window, navigate to this folder (`antigravity-autoaccept-standalone`).
+3. **Right-click** `run-autoaccept.bat` → **Send to** → **Desktop (create shortcut)**.
+4. Move (drag) that desktop shortcut into the Startup folder you opened in step 1.
+
+> **That's it.** The daemon will now launch silently minimized on every Windows boot.  
+> To remove it later, just delete the shortcut from `shell:startup`.
+
+### 🍎 macOS & 🐧 Linux Startup
+The included `run-autoaccept.sh` script **automatically** configures boot persistence:
+- **macOS**: Creates and loads a `LaunchAgent` plist (`~/Library/LaunchAgents/com.arative.autoaccept.plist`).
+- **Linux**: Creates and enables a `systemd` user service (`~/.config/systemd/user/autoaccept.service`).
 
 ---
 

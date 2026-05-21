@@ -37,29 +37,9 @@ if not exist "node_modules\ws" (
     echo.
 )
 
-:: Setup standard shortcut in Startup folder (100% AV-Safe, replaces unsafe VBS launcher)
-set "STARTUP_LNK=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\antigravity-autoaccept.lnk"
-set "OLD_STARTUP_VBS=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\antigravity-autoaccept.vbs"
-
-:: Proactively clean up old VBS to clear any local antivirus quarantines
-if exist "%OLD_STARTUP_VBS%" (
-    echo [Info] Cleaning up old high-risk VBScript launcher...
-    del /f /q "%OLD_STARTUP_VBS%" >nul 2>&1
-)
-
-if not exist "%STARTUP_LNK%" (
-    echo [Info] Setting up persistent startup shortcut...
-    powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%STARTUP_LNK%'); $Shortcut.TargetPath = '%~dp0run-autoaccept.bat'; $Shortcut.WorkingDirectory = '%~dp0'; $Shortcut.WindowStyle = 7; $Shortcut.Save()" >nul 2>&1
-    if exist "%STARTUP_LNK%" (
-        echo [Success] Safely configured minimized startup shortcut.
-    ) else (
-        echo [Warning] Startup shortcut bypassed (permissions or profile restriction).
-    )
-    echo.
-)
-
 :: Start the daemon
 echo [Info] Launching background daemon...
+echo [Tip]  To auto-start on Windows boot, see the README for manual Startup folder setup.
 echo.
 node "%~dp0autoaccept-daemon.js"
 
