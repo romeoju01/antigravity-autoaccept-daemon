@@ -798,13 +798,35 @@ function buildDOMObserverScript(customTexts, blockedCommands, allowedCommands, a
 
     try { scanAndClick(); } catch(e) { _log('initial scan error:', e.message); }
 
-    var __AA_SCAN_QUEUED = false;
+    var lastScanTime = 0;
+    var scanTimeout = null;
+    var MIN_SCAN_INTERVAL_MS = 250; // Cap scan frequency to prevent main-thread starvation
+
+    function queueScan() {
+        if (window.__AA_PAUSED || window.__AA_SWARM_PAUSED) return;
+        if (scanTimeout) return; // Scan is already scheduled
+
+        var now = Date.now();
+        var timeSinceLastScan = now - lastScanTime;
+
+        if (timeSinceLastScan >= MIN_SCAN_INTERVAL_MS) {
+            scanTimeout = setTimeout(function() {
+                scanTimeout = null;
+                lastScanTime = Date.now();
+                try { scanAndClick(); } catch(e) { _log('scan error:', e.message); }
+            }, 0);
+        } else {
+            var delay = MIN_SCAN_INTERVAL_MS - timeSinceLastScan;
+            scanTimeout = setTimeout(function() {
+                scanTimeout = null;
+                lastScanTime = Date.now();
+                try { scanAndClick(); } catch(e) { _log('scan error:', e.message); }
+            }, delay);
+        }
+    }
+
     var observer = new MutationObserver(function() {
-        if (__AA_SCAN_QUEUED || window.__AA_PAUSED || window.__AA_SWARM_PAUSED) return;
-        __AA_SCAN_QUEUED = true;
-        setTimeout(function() {
-            try { scanAndClick(); } catch(e) { _log('scan error:', e.message); } finally { __AA_SCAN_QUEUED = false; }
-        }, 0);
+        queueScan();
     });
 
     observer.observe(document.documentElement, {
@@ -812,15 +834,22 @@ function buildDOMObserverScript(customTexts, blockedCommands, allowedCommands, a
     });
 
     // Post-observe immediate scan: catches dialogs that appeared between initial scan and observer attach
-    setTimeout(function() { try { scanAndClick(); } catch(e) {} }, 0);
+    queueScan();
 
     if (window.__AA_FALLBACK_INTERVAL) { clearInterval(window.__AA_FALLBACK_INTERVAL); }
     window.__AA_FALLBACK_INTERVAL = setInterval(function() {
-        if (window.__AA_PAUSED || window.__AA_SWARM_PAUSED) return; window.__AA_LAST_SCAN = Date.now();
-        setTimeout(function() { try { scanAndClick(); } catch(e) { } }, 0);
+        if (window.__AA_PAUSED || window.__AA_SWARM_PAUSED) return;
+        window.__AA_LAST_SCAN = Date.now();
+        queueScan();
     }, 10000);
 
     window.__AA_OBSERVER = observer;
+    window.__AA_CLEANUP = function() {
+        if (window.__AA_OBSERVER) { window.__AA_OBSERVER.disconnect(); window.__AA_OBSERVER = null; }
+        if (window.__AA_FALLBACK_INTERVAL) { clearInterval(window.__AA_FALLBACK_INTERVAL); window.__AA_FALLBACK_INTERVAL = null; }
+        if (scanTimeout) { clearTimeout(scanTimeout); scanTimeout = null; }
+    };
+
     return 'observer-installed';
 })()
 `;
