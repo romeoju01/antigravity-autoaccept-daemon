@@ -1,4 +1,4 @@
-# Antigravity AutoAccept 2.0 (Cross-Platform Daemon)
+# Antigravity 2.0 AutoAccept (Cross-Platform Daemon)
 
 A highly robust, zero-configuration background daemon designed for Antigravity 2.0. This out-of-process utility automatically clicks standard permission and confirmation prompts in your IDE, providing a completely hands-free development experience.
 

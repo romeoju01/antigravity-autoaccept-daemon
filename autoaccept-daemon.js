@@ -1,5 +1,5 @@
 /**
- * Antigravity AutoAccept 2.0 Daemon (Standalone Portable Edition)
+ * Antigravity 2.0 AutoAccept Daemon (Standalone Portable Edition)
  * 
  * A zero-configuration, self-contained background daemon designed for easy sharing.
  * Dynamically resolves system folders (works on any coworker's PC), checks/installs
@@ -829,7 +829,7 @@ function buildDOMObserverScript(customTexts, blockedCommands, allowedCommands, a
 // Print startup banner
 console.clear();
 console.log(`${COLORS.bright}${COLORS.green}══════════════════════════════════════════════════════════════`);
-console.log(`                ANTIGRAVITY AUTOACCEPT DAEMON v2.0`);
+console.log(`                 ANTIGRAVITY 2.0 AUTOACCEPT DAEMON`);
 console.log(`         Out-of-Process Background Agent for Antigravity`);
 console.log(`══════════════════════════════════════════════════════════════${COLORS.reset}`);
 log('System', 'Initializing background daemon...', COLORS.green);

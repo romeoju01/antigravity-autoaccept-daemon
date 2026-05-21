@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Antigravity AutoAccept 2.0 Launcher (macOS/Linux)
+# Antigravity 2.0 AutoAccept Launcher (macOS/Linux)
 # Zero-configuration bootstrapping script
 
 # Resolve directory context immediately
@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 
 # Print Banner
 echo "=============================================================="
-echo "       LAUNCHING ANTIGRAVITY AUTOACCEPT 2.0 DAEMON..."
+echo "       LAUNCHING ANTIGRAVITY 2.0 AUTOACCEPT DAEMON..."
 echo "=============================================================="
 echo ""
 
@@ -76,7 +76,7 @@ if [ "$(uname)" = "Linux" ]; then
         mkdir -p "$SYSTEMD_DIR"
         cat <<EOF > "$SERVICE_FILE"
 [Unit]
-Description=Antigravity AutoAccept 2.0 Daemon
+Description=Antigravity 2.0 AutoAccept Daemon
 After=network.target
 
 [Service]

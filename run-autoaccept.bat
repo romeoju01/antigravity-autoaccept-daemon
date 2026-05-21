@@ -1,11 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
 
-title Antigravity AutoAccept 2.0 Launcher
+title Antigravity 2.0 AutoAccept Launcher
 color 0A
 
 echo ==============================================================
-echo        ANTIGRAVITY AUTOACCEPT 2.0 STANDALONE LAUNCHER
+echo         ANTIGRAVITY 2.0 AUTOACCEPT STANDALONE LAUNCHER
 echo ==============================================================
 echo.
 
