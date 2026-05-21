@@ -3,6 +3,9 @@
 # Antigravity AutoAccept 2.0 Launcher (macOS/Linux)
 # Zero-configuration bootstrapping script
 
+# Resolve directory context immediately
+cd "$(dirname "$0")"
+
 # Print Banner
 echo "=============================================================="
 echo "       LAUNCHING ANTIGRAVITY AUTOACCEPT 2.0 DAEMON..."
@@ -32,7 +35,69 @@ if [ ! -d "node_modules/ws" ]; then
     echo ""
 fi
 
+# Setup persistent startup survival for macOS LaunchAgent
+if [ "$(uname)" = "Darwin" ]; then
+    PLIST_DIR="$HOME/Library/LaunchAgents"
+    PLIST_FILE="$PLIST_DIR/com.arative.autoaccept.plist"
+    if [ ! -f "$PLIST_FILE" ]; then
+        echo "[Info] Setting up persistent startup survival for macOS..."
+        mkdir -p "$PLIST_DIR"
+        cat <<EOF > "$PLIST_FILE"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.arative.autoaccept</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$(pwd)/run-autoaccept.sh</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+EOF
+        launchctl load "$PLIST_FILE" 2>/dev/null
+        echo "[Success] LaunchAgent installed and loaded. Daemon will run silently on boot."
+        echo ""
+    fi
+fi
+
+# Setup persistent startup survival for Linux systemd unit
+if [ "$(uname)" = "Linux" ]; then
+    SYSTEMD_DIR="$HOME/.config/systemd/user"
+    SERVICE_FILE="$SYSTEMD_DIR/autoaccept.service"
+    if [ ! -f "$SERVICE_FILE" ]; then
+        echo "[Info] Setting up persistent startup survival for Linux..."
+        mkdir -p "$SYSTEMD_DIR"
+        cat <<EOF > "$SERVICE_FILE"
+[Unit]
+Description=Antigravity AutoAccept 2.0 Daemon
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=$(pwd)
+ExecStart=/bin/bash $(pwd)/run-autoaccept.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+EOF
+        systemctl --user daemon-reload 2>/dev/null
+        systemctl --user enable autoaccept.service 2>/dev/null
+        systemctl --user start autoaccept.service 2>/dev/null
+        echo "[Success] Systemd user service installed and enabled. Daemon will run on system boot."
+        echo ""
+    fi
+fi
+
 # Start the daemon
 echo "[Info] Launching background daemon..."
 echo ""
-node "$(dirname "$0")/autoaccept-daemon.js"
+node ./autoaccept-daemon.js
