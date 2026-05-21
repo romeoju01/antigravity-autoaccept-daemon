@@ -1,0 +1,15 @@
+{
+  "name": "antigravity-autoaccept-daemon",
+  "version": "2.0.0",
+  "description": "Zero-configuration out-of-process AutoAccept background daemon for Antigravity",
+  "main": "autoaccept-daemon.js",
+  "scripts": {
+    "start": "node autoaccept-daemon.js"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "author": "arative",
+  "license": "MIT"
+}
+
