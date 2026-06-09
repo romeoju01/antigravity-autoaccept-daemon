@@ -18,6 +18,18 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Syntax Check
+    - name: Install dependencies from lockfile
       run: |
-        node --check autoaccept-daemon.js
+        npm ci --ignore-scripts --no-audit --no-fund
+
+    - name: Syntax check
+      run: |
+        npm run check
+
+    - name: Launcher syntax check
+      run: |
+        bash -n run-autoaccept.sh
+
+    - name: Tests
+      run: |
+        npm test

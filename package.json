@@ -3,8 +3,15 @@
   "version": "2.0.0",
   "description": "Zero-configuration out-of-process AutoAccept background daemon for Antigravity",
   "main": "autoaccept-daemon.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "start": "node autoaccept-daemon.js"
+    "check": "npm run check:node && node --check autoaccept-daemon.js",
+    "check:node": "node -e \"const major = Number(process.versions.node.split('.')[0]); if (major < 18) { console.error('Node.js 18 or newer is required. Installed: ' + process.version); process.exit(1); }\"",
+    "prestart": "npm run check:node",
+    "start": "node autoaccept-daemon.js",
+    "test": "node test/target-filter.test.js"
   },
   "dependencies": {
     "ws": "^8.19.0"
