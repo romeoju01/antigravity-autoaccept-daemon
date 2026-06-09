@@ -29,8 +29,8 @@ let WebSocket;
 try {
     WebSocket = require('ws');
 } catch (e) {
-    console.log('\x1b[33m[Warning] Local "ws" module not found. The launcher batch file should automatically install this on first run.\x1b[0m');
-    console.log('To install manually, run: npm install ws');
+    console.log('\x1b[33m[Warning] Local "ws" module not found. The launcher should automatically install this on first run.\x1b[0m');
+    console.log('To install manually, run: npm ci --ignore-scripts --no-audit --no-fund');
     process.exit(1);
 }
 
@@ -58,6 +58,8 @@ let config = {
 
 let lastSettingsMTime = 0;
 const activeConnections = new Map(); // targetId -> WebSocket instance
+let lastNoTargetLog = 0;
+const NO_TARGET_LOG_INTERVAL_MS = 30000;
 
 function log(module, message, color = COLORS.cyan) {
     const ts = new Date().toLocaleTimeString();
@@ -162,16 +164,46 @@ function getTargetList() {
     });
 }
 
+function isLoopbackHostname(hostname) {
+    const normalized = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
+    if (normalized === 'localhost' || normalized === '::1') return true;
+    if (normalized.endsWith('.localhost')) return true;
+    const parts = normalized.split('.');
+    return parts.length === 4 && parts[0] === '127' && parts.slice(1).every(part => /^\d+$/.test(part) && Number(part) <= 255);
+}
+
+function isTrustedTargetUrl(rawUrl) {
+    if (!rawUrl) return false;
+    if (rawUrl.startsWith('vscode-webview:') || rawUrl.startsWith('chrome-extension:') || rawUrl.startsWith('file:')) {
+        return true;
+    }
+
+    try {
+        const parsed = new URL(rawUrl);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+        return isLoopbackHostname(parsed.hostname);
+    } catch (e) {
+        return false;
+    }
+}
+
+function isLocalDebuggerUrl(rawUrl) {
+    try {
+        const parsed = new URL(rawUrl);
+        if (parsed.protocol !== 'ws:' && parsed.protocol !== 'wss:') return false;
+        return isLoopbackHostname(parsed.hostname);
+    } catch (e) {
+        return false;
+    }
+}
+
 // Check if target is a legitimate candidate for injection
 function isCandidate(target) {
     const type = target.type;
     const url = target.url || '';
     if (!url) return false;
     if (type === 'service_worker' || type === 'worker' || type === 'shared_worker') return false;
-    
-    // Safety check: ensure it is a local loopback address, file, or active conversation frame
-    const isLocal = url.includes('127.0.0.1') || url.includes('localhost') || url.startsWith('vscode-webview:') || url.startsWith('chrome-extension:') || url.startsWith('file:') || url.includes('/c/');
-    if (!isLocal) return false;
+    if (!isTrustedTargetUrl(url)) return false;
     
     return type === 'page' || type === 'iframe' || url.includes('vscode-webview') || url.includes('webview') || url.includes('/c/');
 }
@@ -317,6 +349,13 @@ async function runLoop() {
     
     if (targets.length > 0) {
         const candidates = targets.filter(isCandidate);
+        if (candidates.length === 0) {
+            const now = Date.now();
+            if (now - lastNoTargetLog > NO_TARGET_LOG_INTERVAL_MS) {
+                lastNoTargetLog = now;
+                log('CDP', `Connected to 127.0.0.1:${resolveCdpPort()}, but no supported Antigravity conversation target was found. Open or focus an active conversation.`, COLORS.gray);
+            }
+        }
         
         const activeTargetIds = new Set(targets.map(t => t.id));
         for (const [targetId, conn] of activeConnections) {
@@ -328,9 +367,15 @@ async function runLoop() {
         }
 
         for (const target of candidates) {
-            if (!activeConnections.has(target.id) && target.webSocketDebuggerUrl) {
+            if (!activeConnections.has(target.id) && target.webSocketDebuggerUrl && isLocalDebuggerUrl(target.webSocketDebuggerUrl)) {
                 injectDOMObserver(target.webSocketDebuggerUrl, target.title, target.id);
             }
+        }
+    } else {
+        const now = Date.now();
+        if (now - lastNoTargetLog > NO_TARGET_LOG_INTERVAL_MS) {
+            lastNoTargetLog = now;
+            log('CDP', `Waiting for Antigravity on 127.0.0.1:${resolveCdpPort()}... Open Antigravity and start or focus a conversation.`, COLORS.gray);
         }
     }
 }
@@ -855,6 +900,7 @@ function buildDOMObserverScript(customTexts, blockedCommands, allowedCommands, a
 `;
 }
 
+function startDaemon() {
 // Print startup banner
 console.clear();
 console.log(`${COLORS.bright}${COLORS.green}══════════════════════════════════════════════════════════════`);
@@ -870,3 +916,16 @@ log('System', `Targeting Chrome DevTools Port: ${COLORS.bright}${resolveCdpPort(
 setInterval(runLoop, 2000);
 runLoop();
 log('System', 'Daemon active & polling every 2s. Press Ctrl+C to stop.', COLORS.green);
+}
+
+if (require.main === module) {
+    startDaemon();
+}
+
+module.exports = {
+    isCandidate,
+    isLocalDebuggerUrl,
+    isLoopbackHostname,
+    isTrustedTargetUrl,
+    startDaemon
+};
